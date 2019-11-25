@@ -327,6 +327,7 @@ class ContinuousRewardPurePursuitProvider(object):
         return self._state.done(state, self._params.spatial_precision,self._params.angular_precision)
 
     def reward(self, state):
+        # import pdb; pdb.set_trace()
         """
         If you have reached any point, then 1.
         Otherwise if you are closer to the next waypoint then you used to be,
@@ -344,15 +345,17 @@ class ContinuousRewardPurePursuitProvider(object):
         spat_near = spat_dist < self._params.spatial_precision
         ang_near = ang_dist < self._params.angular_precision
 
-        if spat_near:
-            reward = 200.0
-        else:
-            reward = -float(not (spat_near and ang_near))
+        reward = -spat_dist*5
 
-        if state.robot_collided:
-            reward -= 100
+        # if spat_near:
+        #     reward += 200.0
+        # # else:
+        # #     reward = -float(not (spat_near and ang_near))
 
-        return reward
+        # if state.robot_collided:
+        #     reward -= 100
+
+        # return reward
 
     @staticmethod
     def generate_initial_state(path, params):  # pylint: disable=unused-argument
