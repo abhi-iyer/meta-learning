@@ -327,6 +327,7 @@ class ContinuousRewardPurePursuitProvider(object):
         return self._state.done(state, self._params.spatial_precision,self._params.angular_precision)
 
     def reward(self, state):
+        # import pdb; pdb.set_trace()
         """
         If you have reached any point, then 1.
         Otherwise if you are closer to the next waypoint then you used to be,
