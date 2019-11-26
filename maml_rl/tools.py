@@ -140,7 +140,7 @@ class Sampler(object):
         seeds = np.random.randint(low=low, high=high, size=num_tasks)
         tasks = []
 
-        env_param = EnvParams(iteration_timeout=200,
+        env_param = EnvParams(iteration_timeout=400,
                               goal_ang_dist=np.pi/8,
                               goal_spat_dist=0.2,
                               robot_name=StandardRobotExamples.INDUSTRIAL_TRICYCLE_V1)
@@ -150,7 +150,7 @@ class Sampler(object):
                                              turn_off_obstacles=False,
                                              draw_new_turn_on_reset=False,
                                              seed=s))
-            env = bc_gym_wrapper(env)
+            env = bc_gym_wrapper(env, normalize=True)
             
             tasks.append(env)
         
@@ -198,6 +198,7 @@ class Policy(nn.Module):
         self.fc1 = nn.Linear(135, 100)
         self.fc2 = nn.Linear(100, 100)
         self.fc3 = nn.Linear(100, 2)
+        self.tanh = nn.Tanh()
         
         self.sigma = nn.Parameter(torch.Tensor(2))
         self.sigma.data.fill_(math.log(init_std))
@@ -211,6 +212,7 @@ class Policy(nn.Module):
         output = F.relu(F.linear(input, weight=params['fc1.weight'], bias=params['fc1.bias']))
         output = F.relu(F.linear(output, weight=params['fc2.weight'], bias=params['fc2.bias']))
         output = F.linear(output, weight=params['fc3.weight'], bias=params['fc3.bias'])
+        output = self.tanh(output)
         
         scale = torch.exp(torch.clamp(params['sigma'], min=self.min_log_std))
         
@@ -331,7 +333,7 @@ def detach_distribution(pi):
     return distribution
 
 class MetaLearner(object):
-    def __init__(self, sampler, policy, baseline, gamma=0.95,
+    def __init__(self, sampler, policy, baseline, num_episodes, gamma=0.95,
                  fast_lr=0.01, tau=1.0, device='cpu'):
         self.sampler = sampler
         self.policy = policy
@@ -339,6 +341,7 @@ class MetaLearner(object):
         self.gamma = gamma
         self.fast_lr = fast_lr
         self.tau = tau
+        self.num_episodes = num_episodes
 
         self.device = device
         
@@ -383,11 +386,11 @@ class MetaLearner(object):
         
         episodes = []
         for i, task in enumerate(tasks):                                                                            
-            train_episodes = self.sampler.generate_episodes(task, self.policy, num_episodes=20)
+            train_episodes = self.sampler.generate_episodes(task, self.policy, num_episodes=self.num_episodes)
                         
             params = self.adapt(train_episodes, first_order=first_order)
             
-            valid_episodes = self.sampler.generate_episodes(task, self.policy, num_episodes=20)
+            valid_episodes = self.sampler.generate_episodes(task, self.policy, num_episodes=self.num_episodes)
                         
             episodes.append((train_episodes, valid_episodes))
                         
@@ -401,14 +404,14 @@ class MetaLearner(object):
                     
         return total_return.item()/(len(episodes) * self.sampler.batch_size)
     
-    def test_accuracy(self, sampler):
-        task = sampler.sample_tasks(low=sampler.meta_iter * sampler.batch_size + 1,
-                                    high=sampler.meta_iter * sampler.batch_size + 100,
-                                    num_tasks=1)[0]
+#     def test_accuracy(self, sampler):
+#         task = sampler.sample_tasks(low=sampler.meta_iter * sampler.batch_size + 1,
+#                                     high=sampler.meta_iter * sampler.batch_size + 100,
+#                                     num_tasks=1)[0]
         
-        test_episodes = sampler.generate_episodes(task, self.policy, num_episodes=40)
+#         test_episodes = sampler.generate_episodes(task, self.policy, num_episodes=40)
         
-        return torch.sum(test_episodes.rewards >= 200).item()/40
+#         return torch.sum(test_episodes.rewards >= 200).item()/40
 
 
     def kl_divergence(self, episodes, old_pis=None):

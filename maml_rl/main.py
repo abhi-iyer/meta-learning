@@ -1,7 +1,7 @@
 from tools import *
 
 class MAML():
-    def __init__(self, output_dir, meta_iter=500, train_batch_size=20, test_batch_size=40):
+    def __init__(self, output_dir, meta_iter=50, train_batch_size=20, test_batch_size=40):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         
         self.meta_iter = meta_iter
@@ -21,7 +21,7 @@ class MAML():
         self.policy = Policy()
         self.baseline = LinearFeatureBaseline(input_size=135)
         self.ml = MetaLearner(self.train_sampler, self.policy, 
-                              self.baseline, device=self.device)
+                              self.baseline, num_episodes=train_batch_size, device=self.device)
         
         os.makedirs(output_dir, exist_ok=True)
         self.checkpoint_path = os.path.join(output_dir, 
@@ -85,9 +85,6 @@ class MAML():
         self.load_state_dict(checkpoint)
         del checkpoint  
         
-    def evaluate(self):
-        pass
-        
     def run(self):
         start_iter = self.iteration
         
@@ -95,7 +92,7 @@ class MAML():
         
         for i in range(start_iter, self.meta_iter):
             tasks = self.train_sampler.sample_tasks(low=1, 
-                                                    high=10, 
+                                                    high=20, 
                                                     num_tasks=10)
             episodes = self.ml.sample(tasks, first_order=True)
                         
@@ -114,6 +111,6 @@ class MAML():
             
         print("Finished training for {} meta-iterations".format(self.meta_iter))
         
-exp = MAML(output_dir="experiment2")
+exp = MAML(output_dir="experiment1")
 
 exp.run()

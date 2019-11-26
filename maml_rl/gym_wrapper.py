@@ -119,12 +119,15 @@ class bc_gym_wrapper():
         # If input actions are normalized then scale back to the environment
         if self.normalize:
             action = (action + 1) * (self.action_high -
-                                     self.action_low) / 2 + self.action_low1
+                                     self.action_low) / 2 + self.action_low
         action = Action(command=np.array(action))
         obs, reward, done, info = self._env.step(action)
         # Extract the goal information from the observation variable
         goal_n_obs = self._get_obs(obs)
         info.update(dict(goal_n_state=obs['goal_n_state'][:3]), )
+        
+        # reward -= 1/(min(goal_n_obs[6:]) + 1e-5)
+        
         return goal_n_obs, reward, done, info
 
     def render(self, mode='human'):
