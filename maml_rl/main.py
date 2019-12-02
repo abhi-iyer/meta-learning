@@ -1,7 +1,7 @@
 from tools import *
 
 class MAML():
-    def __init__(self, output_dir, meta_iter=50, train_batch_size=20, test_batch_size=40):
+    def __init__(self, output_dir, meta_iter=200, train_batch_size=20, test_batch_size=40):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         
         self.meta_iter = meta_iter

@@ -140,9 +140,9 @@ class Sampler(object):
         seeds = np.random.randint(low=low, high=high, size=num_tasks)
         tasks = []
 
-        env_param = EnvParams(iteration_timeout=400,
+        env_param = EnvParams(iteration_timeout=250,
                               goal_ang_dist=np.pi/8,
-                              goal_spat_dist=0.2,
+                              goal_spat_dist=1.0, # was 0.2
                               robot_name=StandardRobotExamples.INDUSTRIAL_TRICYCLE_V1)
 
         for s in seeds:

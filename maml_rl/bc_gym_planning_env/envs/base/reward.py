@@ -345,17 +345,17 @@ class ContinuousRewardPurePursuitProvider(object):
         spat_near = spat_dist < self._params.spatial_precision
         ang_near = ang_dist < self._params.angular_precision
 
-#         if spat_near:
-#             reward = 200.0
-#         else:
-#             reward = -float(not (spat_near and ang_near))
+        if spat_near:
+            reward = 200.0
+        else:
+            reward = -float(not (spat_near and ang_near))
 
-#         if state.robot_collided:
-#             reward -= 100
+        if state.robot_collided:
+            reward -= 100
             
-        return -spat_dist
+#         return -spat_dist
 
-#         return reward
+        return reward
 
     @staticmethod
     def generate_initial_state(path, params):  # pylint: disable=unused-argument
