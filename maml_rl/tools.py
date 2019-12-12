@@ -137,10 +137,14 @@ class Sampler(object):
         self.device = device
 
     def sample_tasks(self, low, high, num_tasks):
-        seeds = np.random.randint(low=low, high=high, size=num_tasks)
+        # seeds = np.random.randint(low=low, high=high, size=num_tasks)
+        seeds = [5, 44, 122, 134, 405, 587, 1401, 1408, 1693, 1796]
+        
+        #validation_seeds = [2262, 2302, 4151, 2480, 2628]
+        
         tasks = []
 
-        env_param = EnvParams(iteration_timeout=250,
+        env_param = EnvParams(iteration_timeout=300,
                               goal_ang_dist=np.pi/8,
                               goal_spat_dist=1.0, # was 0.2
                               robot_name=StandardRobotExamples.INDUSTRIAL_TRICYCLE_V1)
@@ -171,7 +175,7 @@ class Sampler(object):
                 action = policy(torch.Tensor(state).to(device=self.device)).sample()
                 action = action.cpu().numpy()
                 
-            next_state, reward, done, _ = task.step(action)
+            next_state, reward, done, _ = task.step(np.clip(action, -1.0, 1.0))
             episodes.append(next_state, action, reward, traj_id)
             
             state = next_state
@@ -402,16 +406,9 @@ class MetaLearner(object):
         for _, valid_episodes in episodes:
             total_return += torch.sum(valid_episodes.rewards)
                     
-        return total_return.item()/(len(episodes) * self.sampler.batch_size)
-    
-#     def test_accuracy(self, sampler):
-#         task = sampler.sample_tasks(low=sampler.meta_iter * sampler.batch_size + 1,
-#                                     high=sampler.meta_iter * sampler.batch_size + 100,
-#                                     num_tasks=1)[0]
+        ret = total_return.item()/(len(episodes) * self.sampler.batch_size)
         
-#         test_episodes = sampler.generate_episodes(task, self.policy, num_episodes=40)
-        
-#         return torch.sum(test_episodes.rewards >= 200).item()/40
+        return ret
 
 
     def kl_divergence(self, episodes, old_pis=None):
@@ -488,8 +485,8 @@ class MetaLearner(object):
         return (torch.mean(torch.stack(losses, dim=0)),
                 torch.mean(torch.stack(kls, dim=0)), pis)
 
-    def step(self, episodes, max_kl=1e-3, cg_iters=10, cg_damping=1e-2,
-             ls_max_steps=10, ls_backtrack_ratio=0.5):
+    def step(self, episodes, max_kl=1e-2, cg_iters=10, cg_damping=1e-5,
+             ls_max_steps=15, ls_backtrack_ratio=0.5):
         """Meta-optimization step (ie. update of the initial parameters), based 
         on Trust Region Policy Optimization (TRPO, [4]).
         """

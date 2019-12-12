@@ -92,7 +92,7 @@ class MAML():
         
         for i in range(start_iter, self.meta_iter):
             tasks = self.train_sampler.sample_tasks(low=1, 
-                                                    high=20, 
+                                                    high=10, 
                                                     num_tasks=10)
             episodes = self.ml.sample(tasks, first_order=True)
                         

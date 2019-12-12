@@ -148,10 +148,10 @@ class ContinuousRewardPurePursuitProviderState(Serializable):
         robot_pose = state.pose
         spat_dist, angular_dist = pose_distances(self.current_goal_pose(), robot_pose)
         spat_near = spat_dist < spatial_precision
-        angular_near = angular_dist < angular_precision
-        goal_reached = spat_near and angular_near
+#         angular_near = angular_dist < angular_precision
+#         goal_reached = spat_near and angular_near
 
-        return goal_reached
+        return spat_near
 
     def get_reward_provider_state_type_name(self):
         """ Get the type (string describing the type) of reward provider state type.
@@ -343,21 +343,20 @@ class ContinuousRewardPurePursuitProvider(object):
                                       robot_pose)
 
         spat_near = spat_dist < self._params.spatial_precision
-        ang_near = ang_dist < self._params.angular_precision
-
+	
+        reward = 0
         if spat_near:
             reward = 200.0
         else:
-            reward = -float(not (spat_near and ang_near))
+            reward -= float(not (spat_near))
 
         if state.robot_collided:
             reward -= 100
-            
-#         return -spat_dist
 
         return reward
 
     @staticmethod
+
     def generate_initial_state(path, params):  # pylint: disable=unused-argument
         """ Generate the initial state of the reward provider.
         :param path np.ndarray(N, 3): the static path

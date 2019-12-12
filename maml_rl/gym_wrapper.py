@@ -122,12 +122,19 @@ class bc_gym_wrapper():
                                      self.action_low) / 2 + self.action_low
         action = Action(command=np.array(action))
         obs, reward, done, info = self._env.step(action)
+       
         # Extract the goal information from the observation variable
         goal_n_obs = self._get_obs(obs)
         info.update(dict(goal_n_state=obs['goal_n_state'][:3]), )
-        
-        # reward -= 1/(min(goal_n_obs[6:]) + 1e-5)
-        
+
+        '''
+        for pt in goal_n_obs[6:][3:]:
+            if pt <= 1: # critical distance to the osbtacle is 0.25
+                reward -= 1.5
+            elif 1 < pt <= 2: # in between critical and safe distance
+                reward -= 0.2*(2 - pt)
+        '''
+     
         return goal_n_obs, reward, done, info
 
     def render(self, mode='human'):
@@ -145,4 +152,3 @@ class bc_gym_wrapper():
         Sets the seed value of the environment
         """
         self._env.seed(seed)
-
