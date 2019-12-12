@@ -1,0 +1,10 @@
+Policy(Policy(
+  (fc1): Linear(in_features=135, out_features=100, bias=True)
+  (fc2): Linear(in_features=100, out_features=100, bias=True)
+  (fc3): Linear(in_features=100, out_features=2, bias=True)
+))
+Baseline(LinearFeatureBaseline(
+  (linear): Linear(in_features=274, out_features=1, bias=False)
+))
+TrainBatchSize(20)
+
